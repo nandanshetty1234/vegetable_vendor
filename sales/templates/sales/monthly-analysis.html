@@ -1,0 +1,389 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Monthly Analysis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('https://img.freepik.com/free-photo/flat-lay-assortment-different-vegetables-with-copy-space_23-2148655289.jpg?t=st=1744964264~exp=1744967864~hmac=9b1e09a842f17c662ca33f0cece07aecd61a080c328d71c6b6407d61b0a7ce91&w=1380');
+      background-size: cover;
+      background-position: center;
+      margin: 0;
+      padding: 20px 0;
+      min-height: 100vh;
+      backdrop-filter: none;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .container {
+      width: 800px;
+      margin: 20px 60px 20px auto; /* Top, Right, Bottom, Left */
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+  }
+    h2 {
+      color: #333;
+      background-color: rgba(255,255,255,0.7);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .month-picker-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="month"] {
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 5px;
+      border: none;
+      margin-left: 10px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: rgba(255,255,255,0.95);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #555;
+      text-align: center;
+    }
+    canvas {
+      margin-top: 40px;
+    }
+    @media(max-width:600px){
+      .container { width:90%; padding:15px; }
+      h2 { font-size:20px; }
+      input[type="month"]{ width:100%; margin-bottom:10px; }
+      button { width:100%; margin:5px 0; }
+    }
+    .home-button {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 16px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s;
+      }
+      
+      .home-button:hover {
+        background-color: #388e3c;
+      }
+      .home-button.home {
+        right: 30px;
+      }
+      
+      .home-button.daily {
+        right: 130px;
+      }
+      
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    
+  <div class="container">
+    <a href="{% url 'vegetable_list' %}" class="home-button home">Home</a>
+    <a href="{% url 'report_page' %}" class="home-button daily">Daily</a>
+    <div class="month-picker-container">
+        
+      <h2>Monthly Report</h2>
+      <input type="month" id="monthPicker">
+      <button onclick="fetchMonthlyReport()">Generate Report</button>
+    </div>
+
+    <p id="message"></p>
+
+    <table id="reportSection" style="display:none;">
+      <thead>
+        <tr>
+          <th>Vegetable</th>
+          <th>Total Quantity</th>
+          <th>Total Profit</th>
+          <th>Total Loss</th>
+        </tr>
+      </thead>
+      <tbody id="reportBody"></tbody>
+    </table>
+
+    <table id="summaryTable" style="display:none; margin-top:20px;">
+      <thead>
+        <tr>
+          <th>Total Investment (Purchase)</th>
+          <th>Total Revenue (Selling)</th>
+          <th>Total Profit</th>
+          <th>Total Loss</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="totalInvestment">₹0</td>
+          <td id="totalRevenue">₹0</td>
+          <td id="totalProfit">₹0</td>
+          <td id="totalLoss">₹0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table id="insightsTable" style="display:none; margin-top:20px;">
+      <tbody>
+        <tr id="highestProfitRow" style="display:none;">
+          <td>The Highest Profit Vegetable(s)</td>
+          <td id="highestProfitValue"></td>
+        </tr>
+        <tr id="lossVegRow" style="display:none;">
+          <td>Vegetables with Loss</td>
+          <td id="lossVegValue"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- new buttons below all tables -->
+    <div style="text-align:center; margin-top:20px;">
+      <button onclick="showQuantityChart()">Show Quantity Chart</button>
+      <button onclick="showProfitLossChart()">Show Profit/Loss Chart</button>
+      <button onclick="showSummaryChart()">Show Summary Chart</button>
+
+    </div>
+
+    <!-- quantity chart canvas -->
+    <div style="width:100%; max-width:600px; margin:40px auto 0 auto;">
+      <canvas id="quantityChart" style="display:none;" height="200"></canvas>
+    </div>
+
+    <!-- profit/loss grouped chart canvas -->
+    <div style="width:100%; max-width:600px; margin:40px auto 0 auto;">
+      <canvas id="profitLossChart" style="display:none;" height="200"></canvas>
+    </div>
+    <div style="width:100%; max-width:600px; margin:40px auto 0 auto;">
+        <canvas id="summaryChart" style="display:none;" height="200"></canvas>
+      </div>
+  </div>
+  <!-- Summary Chart canvas -->
+   
+  
+
+  <script>
+    let qtyChart = null, plChart = null;
+
+    function fetchMonthlyReport(){
+      const month=document.getElementById("monthPicker").value;
+      if(!month){ alert("Please select a month");return; }
+      fetch(`/ajax/monthly-analysis-data/?month=${month}`)
+        .then(r=>{ if(!r.ok)throw"Network error";return r.json()})
+        .then(data=>{
+          const msg=document.getElementById("message");
+          const rs=document.getElementById("reportSection");
+          const rb=document.getElementById("reportBody");
+          const st=document.getElementById("summaryTable");
+          const ti=document.getElementById("totalInvestment");
+          const tr=document.getElementById("totalRevenue");
+          const tp=document.getElementById("totalProfit");
+          const tl=document.getElementById("totalLoss");
+          const hr=document.getElementById("highestProfitRow");
+          const hv=document.getElementById("highestProfitValue");
+          const lr=document.getElementById("lossVegRow");
+          const lv=document.getElementById("lossVegValue");
+
+          // hide all
+          rs.style.display="none"; st.style.display="none";
+          hr.style.display=lr.style.display="none";
+          document.getElementById("quantityChart").style.display="none";
+          document.getElementById("profitLossChart").style.display="none";
+
+          if(!data.vegetables||!data.vegetables.length){
+            msg.innerText=`No vegetables purchased in ${month}`;
+            return;
+          }
+
+          msg.innerText=`Selected Month: ${month}`;
+          rb.innerHTML="";
+
+          let maxP=-Infinity, topV=[], lossV=[];
+
+          data.vegetables.forEach(v=>{
+            const q=+v.quantity||0, p=+v.profit||0, l=+v.loss||0;
+            rb.innerHTML+=
+              `<tr>
+                <td>${v.vegetable}</td>
+                <td>${q}</td>
+                <td>${p}</td>
+                <td>${l}</td>
+              </tr>`;
+            if(p>maxP){ maxP=p; topV=[v.vegetable]; }
+            else if(p===maxP&&p>0){ topV.push(v.vegetable); }
+            if(l>0) lossV.push(`${v.vegetable} (₹${l})`);
+          });
+
+          ti.innerText=`₹${data.summary.total_investment||0}`;
+          tr.innerText=`₹${data.summary.total_revenue||0}`;
+          tp.innerText=`₹${data.summary.total_profit||0}`;
+          tl.innerText=`₹${data.summary.total_loss||0}`;
+
+          rs.style.display="table"; st.style.display="table";
+
+          if(topV.length && maxP>0){
+            hv.innerText=`${topV.join(", ")} (₹${maxP})`;
+            hr.style.display="table-row";
+          }
+          if(lossV.length){
+            lv.innerText=lossV.join(", ");
+            lr.style.display="table-row";
+          }
+          document.getElementById("insightsTable").style.display = "table";
+        })
+        .catch(err=>{ console.error(err);alert("Error loading data");});
+    }
+
+    function showQuantityChart(){
+      const cvs=document.getElementById("quantityChart");
+      cvs.style.display="block";
+      const lbls=[], dataPts=[];
+      document.querySelectorAll("#reportBody tr").forEach(r=>{
+        const c=r.querySelectorAll("td");
+        lbls.push(c[0].innerText);
+        dataPts.push(+c[1].innerText);
+      });
+      const ctx=cvs.getContext("2d");
+      if(qtyChart)qtyChart.destroy();
+      qtyChart=new Chart(ctx,{
+        type:'bar',
+        data:{ labels:lbls, datasets:[{
+          label:'Quantity (kg)',
+          data:dataPts,
+          backgroundColor:'rgba(75,192,192,0.6)',
+          borderColor:'rgba(75,192,192,1)',borderWidth:1,borderRadius:6
+        }]},
+        options:{
+          responsive:true,
+          scales:{ y:{beginAtZero:true,title:{display:true,text:'Quantity (kg)'}},
+                   x:{title:{display:true,text:'Vegetable'}} }
+        }
+      });
+    }
+
+    function showProfitLossChart(){
+      const cvs=document.getElementById("profitLossChart");
+      cvs.style.display="block";
+      const lbls=[], prof=[], loss=[];
+      document.querySelectorAll("#reportBody tr").forEach(r=>{
+        const c=r.querySelectorAll("td");
+        lbls.push(c[0].innerText);
+        prof.push(+c[2].innerText);
+        loss.push(+c[3].innerText);
+      });
+      const ctx=cvs.getContext("2d");
+      if(plChart)plChart.destroy();
+      plChart=new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:lbls,
+          datasets:[
+            {
+              label:'Profit (₹)',
+              data:prof,
+              backgroundColor:'rgba(76,175,80,0.6)',
+              borderColor:'rgba(76,175,80,1)',borderWidth:1
+            },
+            {
+              label:'Loss (₹)',
+              data:loss,
+              backgroundColor:'rgba(244,67,54,0.6)',
+              borderColor:'rgba(244,67,54,1)',borderWidth:1
+            }
+          ]
+        },
+        options:{
+          responsive:true,
+          plugins:{legend:{position:'top'}},
+          scales:{
+            y:{beginAtZero:true,title:{display:true,text:'Amount (₹)'}},
+            x:{title:{display:true,text:'Vegetable'}}
+          }
+        }
+      });
+    }
+    let summaryChart = null;
+
+function showSummaryChart() {
+  if (summaryChart) summaryChart.destroy();
+
+  const investment = parseFloat(document.getElementById("totalInvestment").innerText.replace(/[₹,]/g, '')) || 0;
+  const revenue = parseFloat(document.getElementById("totalRevenue").innerText.replace(/[₹,]/g, '')) || 0;
+  const profit = parseFloat(document.getElementById("totalProfit").innerText.replace(/[₹,]/g, '')) || 0;
+  const loss = parseFloat(document.getElementById("totalLoss").innerText.replace(/[₹,]/g, '')) || 0;
+
+  const ctx = document.getElementById("summaryChart").getContext("2d");
+  document.getElementById("summaryChart").style.display = "block";
+
+  summaryChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Investment", "Revenue", "Profit", "Loss"],
+      datasets: [{
+        label: "Amount (₹)",
+        data: [investment, revenue, profit, loss],
+        backgroundColor: ["rgba(200, 200, 200, 0.6)", "rgba(100, 181, 246, 0.6)", "rgba(76,175,80,0.6)", "rgba(244,67,54,0.6)"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Monthly Summary Overview",
+          font: { size: 18 }
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => `₹${value}`
+          }
+        }
+      }
+    }
+  });
+}
+
+  </script>
+</body>
+</html> 

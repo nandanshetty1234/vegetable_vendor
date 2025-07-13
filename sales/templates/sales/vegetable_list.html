@@ -1,0 +1,331 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Vendor Analysis</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-image: url('https://img.freepik.com/free-photo/flat-lay-assortment-different-vegetables-with-copy-space_23-2148655289.jpg?t=st=1744964264~exp=1744967864~hmac=9b1e09a842f17c662ca33f0cece07aecd61a080c328d71c6b6407d61b0a7ce91&w=1380');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            margin: 0;
+            color: #333;
+        }
+        
+        
+
+        .container {
+            width: 800px;
+            margin: 20px 60px 20px auto; /* Top, Right, Bottom, Left */
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+        }
+        
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        h3 {
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+
+        .section {
+            background-color: #ffffff;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        input[type="number"], input[type="text"], input[type="date"] {
+            padding: 8px;
+            width: 90%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #2980b9;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1c5980;
+        }
+
+        .success-msg {
+            color: green;
+            font-weight: bold;
+        }
+
+        .error-msg {
+            color: red;
+            font-weight: bold;
+        }
+
+        #dateMessage {
+            margin-top: 8px;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+
+        p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+
+        .calculate-results {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .top-right-btn {
+            float: right;
+            margin-top: -50px;
+        }
+
+        .center-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-column {
+            flex: 1;
+            min-width: 250px;
+        }
+        h2 {
+            text-align: right;
+            font-size: 30px;
+            color: #27ae60;
+            font-weight: 50px;
+            display: inline-block;
+        }
+        
+
+        @media screen and (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .header-flex {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+            
+            .top-right-btn {
+                display: flex;
+                gap: 10px;
+                margin-top: 0; /* Reset float-based layout */
+                float: none;    /* Clear float */
+            }
+            
+
+            .form-row {
+                flex-direction: column;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Vegetable Vendor Analysis</h2>
+    <div class="header-flex">
+        
+        <div class="top-right-btn">
+            <a href="{% url 'report_page' %}">
+                <button>Day Analysis</button>
+            </a>
+            <a href="{% url 'monthly_analysis' %}">
+                <button>Monthly Analysis</button>
+            </a>
+        </div>
+    </div>
+    
+
+    <!-- Date Picker -->
+    <div class="section center-content">
+        <form id="setDateForm">
+            {% csrf_token %}
+            <label for="date">Date:</label>
+            <input type="date" id="dateInput" name="date" value="{{ selected_date }}" required>
+            <button type="button" id="setDateBtn">Set Date</button>
+        </form>
+        <p id="dateMessage">Selected Date: {{ selected_date }}</p>
+    </div>
+
+    <!-- Vegetable Table -->
+    <div class="section">
+        <form id="vegetableForm" class="center-content">
+            {% csrf_token %}
+            <table>
+                <tr>
+                    <th>Vegetable</th>
+                    <th>Quantity</th>
+                    <th>Purchase Price</th>
+                    <th>Selling Price</th>
+                </tr>
+                <tbody id="vegetableTable">
+                    {% for veg in vegetables %}
+                        <tr>
+                            <td>{{ veg.vegetable }}</td>
+                            <td><input type="number" name="quantity_{{ veg.id }}" value="{{ veg.quantity|default_if_none:'' }}" required></td>
+                            <td><input type="number" name="purchase_price_{{ veg.id }}" value="{{ veg.purchase_price|default_if_none:'' }}" required></td>
+                            <td><input type="number" name="selling_price_{{ veg.id }}" value="{{ veg.selling_price|default_if_none:'' }}" required></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <button type="submit">Save All Data</button>
+            <p id="saveMessage" class="success-msg"></p>
+        </form>
+    </div>
+
+    <!-- Add/Delete Section -->
+    <div class="section">
+        <div class="form-row">
+            <div class="form-column">
+                <h3>Add Vegetable</h3>
+                <form id="addVegetableForm">
+                    {% csrf_token %}
+                    <input type="text" id="vegetableName" name="vegetable_name" placeholder="vegetable_name" required>
+                    <button type="submit">Add</button>
+                    <p id="addMessage" class="success-msg"></p>
+                </form>
+            </div>
+            <div class="form-column">
+                <h3>Delete Vegetable</h3>
+                <form id="deleteVegetableForm">
+                    {% csrf_token %}
+                    <input type="text" id="deleteVegetableName" name="vegetable_name" placeholder="vegetable_name" required>
+                    <button type="submit">Delete</button>
+                    <p id="deleteMessage" class="success-msg"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit/Loss Section -->
+    <div class="section calculate-results">
+        <p>Total Purchase: ₹<span id="totalPurchase">0.00</span></p>
+        <p>Total Selling: ₹<span id="totalSelling">0.00</span></p>
+        <p>Profit: ₹<span id="profit">0.00</span></p>
+        <p>Loss: ₹<span id="loss">0.00</span></p>
+        <button id="calculateBtn">Calculate</button>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    $(document).ready(function() {
+        let selectedDate = "{{ selected_date }}";
+        $.ajaxSetup({ headers: { "X-CSRFToken": "{{ csrf_token }}" } });
+
+        // Set Date
+        $("#setDateBtn").click(function() {
+            selectedDate = $("#dateInput").val();
+            if (!selectedDate) {
+                alert("Please select a date!");
+                return;
+            }
+            $.post("{% url 'set_date' %}", { date: selectedDate }, function(response) {
+                location.reload();
+            }).fail(function(xhr) {
+                alert("Error: " + xhr.status + " - " + xhr.responseText);
+            });
+        });
+
+        // Save Vegetable Data
+        $('#vegetableForm').submit(function(event) {
+            event.preventDefault();
+            $.post("{% url 'save_data' %}", $(this).serialize() + "&date=" + selectedDate, function(response) {
+                $("#saveMessage").text("Data saved successfully!");
+            }).fail(function(xhr) {
+                alert("Error: " + xhr.status + ": " + xhr.responseText);
+            });
+        });
+
+        // Add Vegetable
+        $("#addVegetableForm").submit(function(event) {
+            event.preventDefault();
+            $.post("{% url 'add_vegetable' %}", $(this).serialize() + "&date=" + selectedDate, function(response) {
+                location.reload();
+            }).fail(function(xhr) {
+                alert("Error: " + xhr.status + " - " + xhr.responseText);
+            });
+        });
+
+        // Delete Vegetable
+        $("#deleteVegetableForm").submit(function(event) {
+            event.preventDefault();
+            $.post("{% url 'delete_vegetable' %}", $(this).serialize() + "&date=" + selectedDate, function(response) {
+                location.reload();
+            }).fail(function(xhr) {
+                alert("Error: " + xhr.status + " - " + xhr.responseText);
+            });
+        });
+
+        // Calculate Profit and Loss
+        $("#calculateBtn").click(function() {
+            $.get("{% url 'calculate_totals' %}", { date: selectedDate }, function(response) {
+                if (response.success) {
+                    $("#totalPurchase").text(response.total_purchase_price.toFixed(2));
+                    $("#totalSelling").text(response.total_selling_price.toFixed(2));
+                    $("#profit").text(response.profit.toFixed(2));
+                    $("#loss").text(response.loss.toFixed(2));
+                } else {
+                    alert("Error fetching calculations.");
+                }
+            }).fail(function(xhr) {
+                alert("Error: " + xhr.status + " - " + xhr.responseText);
+            });
+        });
+    });
+</script>
+</body>
+</html>

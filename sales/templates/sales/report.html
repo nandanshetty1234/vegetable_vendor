@@ -1,0 +1,325 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vegetable Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://img.freepik.com/free-photo/flat-lay-assortment-different-vegetables-with-copy-space_23-2148655289.jpg?t=st=1744964264~exp=1744967864~hmac=9b1e09a842f17c662ca33f0cece07aecd61a080c328d71c6b6407d61b0a7ce91&w=1380');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            
+        }
+
+        .container {
+            width: 800px;
+            margin: 20px 60px 20px auto; /* Top, Right, Bottom, Left */
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+        }
+        h2, h3 {
+            text-align: center;
+            color: #2d572c;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="date"] {
+            padding: 8px 12px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px 0;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(255, 255, 255, 0.95);
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .summary-table {
+            width: 70%;
+            margin: 0 auto;
+        }
+
+        .center-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        p.message {
+            font-size: 18px;
+            color: green;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #price-div, #quantity-div, #groupedbar-div {
+            text-align: center;
+            margin-top: 30px;
+            display: none;
+        }
+
+        img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+        .home-button {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+          }
+          
+          .home-button:hover {
+            background-color: #388e3c;
+          }
+          .home-button.home {
+            right: 30px;
+          }
+          
+          .home-button.monthly {
+            right: 130px;
+          }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <a href="{% url 'vegetable_list' %}" class="home-button home">Home</a>
+
+    <a href="{% url 'monthly_analysis' %}" class="home-button monthly">Monthly</a>
+    <h2>Select a Date to View Report</h2>
+
+    <form method="get" action="{% url 'report_page' %}">
+        <input type="date" id="selectedDate" name="date" value="{{ selected_date }}">
+        <button type="submit">Date</button>
+        {% if message %}
+            <div class="center-message">
+                <p class="message">{{ message }}</p>
+            </div>
+        {% endif %}
+    </form>
+
+    {% if data and data|length > 0 %}
+    <div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Vegetable</th>
+                    <th>Quantity</th>
+                    <th>Purchase Price (per kg)</th>
+                    <th>Selling Price (per kg)</th>
+                    <th>Total Purchase Price</th>
+                    <th>Total Selling Price</th>
+                    <th>Profit</th>
+                    <th>Loss</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td>{{ item.vegetable }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.purchase_price }}</td>
+                    <td>{{ item.selling_price }}</td>
+                    <td>{{ item.total_purchase }}</td>
+                    <td>{{ item.total_selling }}</td>
+                    <td>{{ item.profit }}</td>
+                    <td>{{ item.loss }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+        <h3>Summary Report for {{ selected_date }}</h3>
+
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Total Purchase Price</th>
+                    <th>Total Selling Price</th>
+                    <th>Total Profit</th>
+                    <th>Total Loss</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ summary.total_purchase }}</td>
+                    <td>{{ summary.total_selling }}</td>
+                    <td>{{ summary.profit }}</td>
+                    <td>{{ summary.loss }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <!-- Show Quantity Analysis -->
+            <form method="post" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="selected_date" value="{{ selected_date }}">
+                <button type="submit" name="show_chart">Quantity Analysis</button>
+            </form>
+
+            <!-- Load Price Analysis -->
+            <button onclick="loadPriceChart()">Price Analysis</button>
+
+            <!-- Load Grouped Bar Chart -->
+            <button onclick="loadGroupedBarChart()">Total Price Analysis</button>
+
+
+            <!-- Load Profit & Loss Chart -->
+            <button onclick="loadStackedProfitLossChart()">Profit/Loss Stacked Chart</button>
+
+        </div>
+
+        {% if chart_url %}
+        <div id="quantity-div" style="display: block;">
+            <h3>Quantity Analysis</h3>
+            <img src="{{ chart_url }}" alt="Quantity Chart">
+        </div>
+        {% endif %}
+
+        <div id="price-div">
+            <h3>Price Analysis</h3>
+            <img id="price-chart" src="" alt="Price Chart">
+        </div>
+
+        <div id="groupedbar-div">
+            <h3>Grouped Bar Chart (Quantity vs Price)</h3>
+            <img id="groupedbar-chart" src="" alt="Grouped Bar Chart">
+        </div>
+
+        <div id="stacked-div" style="display:none;">
+            <h3>Stacked Bar Chart (Profit vs Loss)</h3>
+            <img id="stacked-chart" src="" alt="Stacked Profit/Loss Chart">
+        </div>
+        
+
+    {% endif %}
+</div>
+
+<script>
+    function loadPriceChart() {
+        const selectedDate = document.getElementById("selectedDate").value;
+
+        fetch(`/ajax/price-chart/?date=${selectedDate}`)
+            .then(response => response.json())
+            .then(data => {
+                const chartImg = document.getElementById("price-chart");
+                chartImg.src = "data:image/png;base64," + data.chart;
+
+                document.getElementById("price-div").style.display = "block";
+                document.getElementById("quantity-div").style.display = "none";
+                document.getElementById("groupedbar-div").style.display = "none";
+            })
+            .catch(error => {
+                console.error("Error loading price chart:", error);
+                //alert("Failed to load the price chart. Try again.");
+            });
+    }
+
+    function loadGroupedBarChart() {
+        const selectedDate = document.getElementById("selectedDate").value;
+
+        fetch(`/ajax/grouped-bar-chart/?date=${selectedDate}`)
+            .then(response => response.json())
+            .then(data => {
+                const chartImg = document.getElementById("groupedbar-chart");
+                chartImg.src = "data:image/png;base64," + data.chart;
+
+                // Show only grouped bar chart
+                document.getElementById("groupedbar-div").style.display = "block";
+                document.getElementById("price-div").style.display = "none";
+                document.getElementById("quantity-div").style.display = "none";
+            })
+            .catch(error => {
+                console.error("Error loading grouped bar chart:", error);
+               // alert("Failed to load the chart. Try again.");
+            });
+    }
+
+    function loadStackedProfitLossChart() {
+        const selectedDate = document.getElementById("selectedDate").value;
+    
+        fetch(`/ajax/stacked-profit-loss-chart/?date=${selectedDate}`)
+            .then(response => response.json())
+            .then(data => {
+                const chartImg = document.getElementById("stacked-chart");
+                chartImg.src = "data:image/png;base64," + data.chart;
+    
+                // Show only stacked chart
+                document.getElementById("stacked-div").style.display = "block";
+                document.getElementById("groupedbar-div").style.display = "none";
+                document.getElementById("profitloss-div").style.display = "none";
+                document.getElementById("price-div").style.display = "none";
+                document.getElementById("quantity-div").style.display = "none";
+            })
+            .catch(error => {
+                console.error("Error loading stacked chart:", error);
+             //alert("Failed to load Stacked Chart. Try again.");
+            });
+    }
+    
+    
+</script>
+
+</body>
+</html>
