@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dokyt2g=3=0f4g5vg5@k2sm=ivt@k3eby!ejtx2u!ra)55obye')
 
 # ❗ Important: Turn off debug for production
-DEBUG = False
+DEBUG = True
 
 # Allow all hosts for now (Render will assign a URL)
 ALLOWED_HOSTS = ['*']
